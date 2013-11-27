@@ -6,7 +6,8 @@ LOG = logging.getLogger("IndexedDictList")
 
 class IndexedDictList(list):
     """A list of dicts that can return sublists based on matching
-    of key values within the dict elements"""
+    of key values within the dict elements.
+    """
     def __init__(self, l):
         list.__init__(self, l)
         self._indices = {}
@@ -20,7 +21,7 @@ class IndexedDictList(list):
     def __mul__(self,other):
         return IndexedDictList(list.__mul__(self,other))
 
-    def get(self, key, value):
+    def find(self, key, value):
         """Returns an IndexedDictList containing all members with the given key, matching the given value"""
         index = self.get_index(key)
         return IndexedDictList(index.get(value))
