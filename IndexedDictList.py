@@ -32,7 +32,7 @@ class IndexedDictList(list):
         if index:
             return index # Already have it
         # Need to build it
-        LOG.info("Building index on property %s", key)
+        LOG.debug("Building index on property %s", key)
         index = {}
         for el in self:
             val = el.get(key)
