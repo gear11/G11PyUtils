@@ -24,7 +24,7 @@ class IndexedDictList(list):
     def find(self, key, value):
         """Returns an IndexedDictList containing all members with the given key, matching the given value"""
         index = self.get_index(key)
-        return IndexedDictList(index.get(value))
+        return IndexedDictList(index.get(value)) if value in index else []
 
     def get_index(self, key):
         """Returns an index (dict) for the given key over all items, where each entry in the index is a list
