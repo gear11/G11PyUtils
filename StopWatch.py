@@ -12,6 +12,7 @@ class StopWatch():
         self._started = None
         self._stopped = None
 
+    # Test
     def start(self):
         now = datetime.now()
         if not self._started:
