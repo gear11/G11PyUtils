@@ -16,12 +16,17 @@ def is_str_type(o):
 def print_bold(s):
     print '\033[1m' + s + '\033[0m'
 
+def fout(s, enc="utf-8"):
+    if not s:
+        return sys.stdout
+    return codecs.open(s, 'w', enc)
 
 def fopen(s, enc="utf-8"):
     """Opens the indicated file, handling special cases including None, "-", "stdin" (indicating stdin),
     and "stderr", indicating stderr.  For files that end in ".gz" or ".bz2", automatically handles
     decompression"""
     if not s:
+        LOG.info("Returning sys.stdin")
         return sys.stdin
     ext = s.rsplit(".", 1)[-1]
     if ext == "bz2":
