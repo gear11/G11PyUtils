@@ -17,7 +17,7 @@ def print_bold(s):
     print '\033[1m' + s + '\033[0m'
 
 def fout(s, enc="utf-8"):
-    if not s:
+    if not s or s.lower == 'stdout' or s == '-':
         return sys.stdout
     return codecs.open(s, 'w', enc)
 
