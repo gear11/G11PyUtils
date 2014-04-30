@@ -90,3 +90,29 @@ def etree_to_dict(t):
         else:
             d[tag_name] = text
     return d
+
+class HasNextIter:
+    def __init__(self, it):
+        self._it = it
+        self._next = None
+
+    def __iter__(self):
+        return self
+
+    def has_next(self):
+        return self._fetchNext() != None
+
+    def _fetchNext(self):
+        if not self._next:
+            try:
+                self._next = self._it.next()
+            except StopIteration:
+                pass
+        return self._next
+
+    def next(self):
+        n = self._fetchNext()
+        if not n:
+            raise StopIteration
+        self._next = None
+        return n
