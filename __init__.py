@@ -1,12 +1,15 @@
 from IndexedDictList import IndexedDictList
 from StopWatch import StopWatch
 import bz2
+import gzip
 import codecs
 from collections import defaultdict
 import logging
 import sys
+import glob
 LOG = logging.getLogger("g11pyutils")
 from Connector import Connector
+import itertools
 
 
 def is_str_type(o):
@@ -25,18 +28,26 @@ def fopen(s, enc="utf-8"):
     """Opens the indicated file, handling special cases including None, "-", "stdin" (indicating stdin),
     and "stderr", indicating stderr.  For files that end in ".gz" or ".bz2", automatically handles
     decompression"""
-    if not s:
+    if not s or s == '-':
         LOG.info("Returning sys.stdin")
         return sys.stdin
-    ext = s.rsplit(".", 1)[-1]
-    if ext == "bz2":
-        fo = bz2.BZ2File(s, 'rb')
-    else:
-        fo = open(s, 'rb') # Encoding handled below
+    fos = []
+    fnames = glob.glob(s)
+    if not fnames:
+        raise IOError("No such file: %s" % s)
+    for f in fnames:
+        ext = f.rsplit(".", 1)[-1]
+        if ext == "bz2":
+            fo =  bz2.BZ2File(f, 'rb')
+        elif ext == "gz":
+            fo = gzip.open(f, 'rb')
+        else:
+            fo = open(f, 'rb') # Encoding handled below
+        fos = itertools.chain(fos, fo) if len(fnames) > 1 else fo
 
     # Wrap the raw file handle into one that can decode
     #return codecs.decode(fo, enc)
-    return fo
+    return fos
 
 
 def to_dict(o):
