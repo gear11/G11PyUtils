@@ -16,10 +16,12 @@ def is_str_type(o):
 def print_bold(s):
     print '\033[1m' + s + '\033[0m'
 
+
 def fout(s, enc="utf-8"):
     if not s or s.lower == 'stdout' or s == '-':
         return sys.stdout
     return codecs.open(s, 'w', enc)
+
 
 def fopen(s, enc="utf-8"):
     """Opens the indicated file, handling special cases including None, "-", "stdin" (indicating stdin),
@@ -38,6 +40,14 @@ def fopen(s, enc="utf-8"):
     #return codecs.decode(fo, enc)
     return fo
 
+
+def to_list(o):
+    if type(o) is list:
+        return o
+    elif is_str_type(o):
+        return [o]
+    else:
+        return list(o)  # Must be iterable
 
 def to_dict(o):
     if is_str_type(o):
@@ -91,6 +101,7 @@ def etree_to_dict(t):
             d[tag_name] = text
     return d
 
+
 class HasNextIter:
     def __init__(self, it):
         self._it = it
@@ -116,3 +127,40 @@ class HasNextIter:
             raise StopIteration
         self._next = None
         return n
+
+
+def select(d, keys):
+    """
+    Returns a new dict containing the indicated key(s) from the original.
+    """
+    if is_str_type(keys):
+        keys = [keys]
+    return dict((k, d[k]) for k in keys)
+
+
+def has_all(d0, d1):
+    """Indicates if d0 has all of the keys/values in d1 and they are equal.
+    d0 may have additional keys, which are ignored. Great for unit tests
+    where only some of the values returned are important."""
+    to_check = [(d0, d1)]
+    while len(to_check):
+        d = to_check.pop()
+        for k, v1 in d[1].iteritems():  # For each key/val in D1
+            v0 = d[0].get(k)  # Get the corresponding val from D0
+            if type(v1) in (str, unicode):  # If the type is string or uni, do equals
+                if v0 != v1:
+                    return False
+            elif v0 is None:  # If the item is missing, we're done
+                LOG.info("Missing expected key: %s", k)
+            elif type(v1) is not type(v0):  # Else ensure same type
+                LOG.info("Mismatched types: %s, %s", type(v1), type(v0))
+                return False
+            elif type(v1) is dict:  # If the item is a dict, add the values to the list
+                to_check.append((v0, v1))
+            elif type(v1) is list:  # If the value is a list, compare the ordered entries, up to length of expected
+                LOG.info("Comparing lists: %s, %s", v0[0:len(v1)], v1)
+                to_check += zip(v0[0:len(v1)], v1)
+            elif v0 != v1:
+                LOG.info("Mismatched values: %s, %s", v1, v0)
+                return False
+    return True

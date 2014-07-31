@@ -6,7 +6,7 @@ LOG = logging.getLogger("IndexedDictList")
 
 class IndexedDictList(list):
     """A list of dicts that can return sublists based on matching
-    of key values within the dict elements. BOO.
+    of key values within the dict elements.
     """
     def __init__(self, l):
         list.__init__(self, l)
