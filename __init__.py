@@ -40,7 +40,7 @@ def fopen(s, enc="utf-8"):
     for f in fnames:
         ext = f.rsplit(".", 1)[-1]
         if ext == "bz2":
-            fo =  bz2.BZ2File(f, 'rb')
+            fo = bz2.BZ2File(f, 'r', 10*1024)
         elif ext == "gz":
             fo = gzip.open(f, 'rb')
         else:
@@ -48,8 +48,9 @@ def fopen(s, enc="utf-8"):
         fos = itertools.chain(fos, fo) if len(fnames) > 1 else fo
 
     # Wrap the raw file handle into one that can decode
-    #return codecs.decode(fo, enc)
-    return fos
+    # Wikipedia needs this
+    return fos if enc is 'b' else codecs.getreader(enc)(fos)
+    #return fos
 
 
 def to_list(o):
