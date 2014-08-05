@@ -10,7 +10,8 @@ import glob
 LOG = logging.getLogger("g11pyutils")
 from Connector import Connector
 import itertools
-
+import datetime
+import requests
 
 def is_str_type(o):
     return isinstance(o, str) or isinstance(o, unicode)
@@ -33,6 +34,10 @@ def fopen(s, enc="utf-8"):
     if not s or s == '-':
         LOG.info("Returning sys.stdin")
         return sys.stdin
+    # Handle http(s):
+    if s.startswith('http://') or s.startswith('https://'):
+        r = requests.get(s, stream=True)
+        return r.raw if enc == 'b' else codecs.getreader(enc)(r.raw)
     fos = []
     fnames = glob.glob(s)
     if not fnames:
@@ -49,7 +54,7 @@ def fopen(s, enc="utf-8"):
 
     # Wrap the raw file handle into one that can decode
     # Wikipedia needs this
-    return fos if enc is 'b' else codecs.getreader(enc)(fos)
+    return fos if enc == 'b' else codecs.getreader(enc)(fos)
     #return fos
 
 
@@ -77,38 +82,32 @@ def string_to_dict(s):
     return d
 
 
-def etree_to_dictx(t):
-    """Converts an XML node from ElementTree to a dict"""
-    d = {t.tag : map(etree_to_dict, t.iterchildren())}
-    d.update(('@' + k, v) for k, v in t.attrib.iteritems())
-    d['text'] = t.text
-    return d
-
-
 def bare(tag):
     """Returns a tag stripped of preceding namespace info"""
     n = tag.rfind('}')
     return tag[n+1:] if n >= 0 else tag
 
 
-def etree_to_dict(t):
-    strip_ns = True # Need to make this a param, but need to deal with recursion
+def etree_to_dict(t, strip_ns=True, prefix_attr=False, ignore=[]):
+    ignore = set(ignore) if ignore else []
     tag_name = bare(t.tag) if strip_ns else t.tag
     d = {tag_name: {} if t.attrib else None}
     children = list(t)
     if children:
         dd = defaultdict(list)
-        for dc in map(etree_to_dict, children):
+        for c in children:
+            dc = etree_to_dict(c, strip_ns, prefix_attr, ignore)
             for k, v in dc.iteritems():
                 dd[k].append(v)
-        d = {tag_name: {k:v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+        d = {tag_name: {k: v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
     if t.attrib:
-        d[tag_name].update(('@' + k, v) for k, v in t.attrib.iteritems())
+        d[tag_name].update(('@'+k if prefix_attr else k, v) for k, v in t.attrib.iteritems() if not k in ignore)
     if t.text:
         text = t.text.strip()
-        if children or t.attrib:
+        #if children or t.attrib:
+        if children or (t.attrib and d[tag_name]):  # Condense elements w/ text and w/o attr into a list
             if text:
-              d[tag_name]['#text'] = text
+                d[tag_name]['#text'] = text
         else:
             d[tag_name] = text
     return d
@@ -123,9 +122,9 @@ class HasNextIter:
         return self
 
     def has_next(self):
-        return self._fetchNext() != None
+        return self._fetch_next() is not None
 
-    def _fetchNext(self):
+    def _fetch_next(self):
         if not self._next:
             try:
                 self._next = self._it.next()
@@ -134,7 +133,7 @@ class HasNextIter:
         return self._next
 
     def next(self):
-        n = self._fetchNext()
+        n = self._fetch_next()
         if not n:
             raise StopIteration
         self._next = None
@@ -176,3 +175,9 @@ def has_all(d0, d1):
                 LOG.info("Mismatched values: %s, %s", v1, v0)
                 return False
     return True
+
+
+def default_json_encoder(self, obj):
+    if isinstance(obj, datetime.datetime):
+        return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+    return obj.__dict__
