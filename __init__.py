@@ -181,3 +181,7 @@ def default_json_encoder(self, obj):
     if isinstance(obj, datetime.datetime):
         return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
     return obj.__dict__
+
+
+def to_epoch_seconds(dt):
+    return int((dt - datetime.datetime(1970, 1, 1)).total_seconds())
