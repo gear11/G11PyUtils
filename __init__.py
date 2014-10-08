@@ -1,5 +1,5 @@
-from IndexedDictList import IndexedDictList
-from StopWatch import StopWatch
+from .IndexedDictList import IndexedDictList
+from .StopWatch import StopWatch
 import bz2
 import gzip
 import codecs
@@ -8,17 +8,17 @@ import logging
 import sys
 import glob
 LOG = logging.getLogger("g11pyutils")
-from Connector import Connector
+from .Connector import Connector
 import itertools
 import datetime
 import requests
 
 def is_str_type(o):
-    return isinstance(o, str) or isinstance(o, unicode)
+    return isinstance(o, str) or (sys.version_info < (3,0,0) and type(o) is unicode)
 
 
 def print_bold(s):
-    print '\033[1m' + s + '\033[0m'
+    print('\033[1m' + s + '\033[0m')
 
 
 def fout(s, enc="utf-8"):
@@ -97,11 +97,11 @@ def etree_to_dict(t, strip_ns=True, prefix_attr=False, ignore=[]):
         dd = defaultdict(list)
         for c in children:
             dc = etree_to_dict(c, strip_ns, prefix_attr, ignore)
-            for k, v in dc.iteritems():
+            for k, v in dc.items():
                 dd[k].append(v)
-        d = {tag_name: {k: v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+        d = {tag_name: {k: v[0] if len(v) == 1 else v for k, v in dd.items()}}
     if t.attrib:
-        d[tag_name].update(('@'+k if prefix_attr else k, v) for k, v in t.attrib.iteritems() if not k in ignore)
+        d[tag_name].update(('@'+k if prefix_attr else k, v) for k, v in t.attrib.items() if not k in ignore)
     if t.text:
         text = t.text.strip()
         #if children or t.attrib:
@@ -158,7 +158,7 @@ def has_all(d0, d1):
         d = to_check.pop()
         for k, v1 in d[1].iteritems():  # For each key/val in D1
             v0 = d[0].get(k)  # Get the corresponding val from D0
-            if type(v1) in (str, unicode):  # If the type is string or uni, do equals
+            if type(v1) is str or (sys.version_info < (3,0,0) and type(v1) is unicode):  # If the type is string or uni, do equals
                 if v0 != v1:
                     return False
             elif v0 is None:  # If the item is missing, we're done

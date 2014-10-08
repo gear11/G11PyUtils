@@ -1,6 +1,5 @@
 import logging
 import time
-import pymongo
 
 LOG = logging.getLogger("Connector")
 
@@ -32,7 +31,7 @@ class Connector(object):
                 self.conn = self.do_connect()
                 LOG.warn("Connection: %s", self.conn)
                 return self.conn
-            except Exception, ex:
+            except Exception as ex:
                 LOG.warn("Failure connecting: %s", ex)
                 if attempt > self.retries:
                     LOG.warn("Failed to connect after %s attempts.", attempt)
