@@ -29,7 +29,7 @@ class Connector(object):
             attempt += 1
             try:
                 self.conn = self.do_connect()
-                LOG.warn("Connection: %s", self.conn)
+                LOG.info("Connection: %s", self.conn)
                 return self.conn
             except Exception as ex:
                 LOG.warn("Failure connecting: %s", ex)
