@@ -12,6 +12,7 @@ from .Connector import Connector
 import itertools
 import datetime
 import requests
+import decimal
 
 def is_str_type(o):
     return isinstance(o, str) or (sys.version_info < (3,0,0) and type(o) is unicode)
@@ -177,10 +178,16 @@ def has_all(d0, d1):
     return True
 
 
-def default_json_encoder(self, obj):
-    if isinstance(obj, datetime.datetime):
-        return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
-    return obj.__dict__
+def json_dt_encoder(orig):
+
+    def json_encoder(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+        elif isinstance(obj, decimal.Decimal):
+            return str(obj)
+        return orig(self, obj)
+
+    return json_encoder
 
 
 def to_epoch_seconds(dt):
